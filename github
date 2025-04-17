@@ -1,0 +1,59 @@
+import pandas as pd
+import numpy as np
+
+def load_data(filepath):
+    """Load dataset from a CSV file."""
+    return pd.read_csv(filepath)
+
+def handle_missing_values(df):
+    """Handle missing values in the dataset."""
+    # Example: Fill numeric columns with median, categorical with mode
+    for column in df.columns:
+        if df[column].dtype in ['float64', 'int64']:
+            df[column].fillna(df[column].median(), inplace=True)
+        else:
+            df[column].fillna(df[column].mode()[0], inplace=True)
+    return df
+
+def remove_duplicates(df):
+    """Remove duplicate rows from the dataset."""
+    return df.drop_duplicates()
+
+def detect_and_handle_outliers(df, numerical_cols):
+    """Remove outliers using IQR method for given numerical columns."""
+    for col in numerical_cols:
+        Q1 = df[col].quantile(0.25)
+        Q3 = df[col].quantile(0.75)
+        IQR = Q3 - Q1
+        lower_bound = Q1 - 1.5 * IQR
+        upper_bound = Q3 + 1.5 * IQR
+
+        # Filter out the outliers
+        df = df[(df[col] >= lower_bound) & (df[col] <= upper_bound)]
+    return df
+
+def save_cleaned_data(df, output_path):
+    """Save cleaned data to a new CSV file."""
+    df.to_csv(output_path, index=False)
+
+# --- Main Function ---
+if __name__ == "__main__":
+    file_path = 'raw_data.csv'           # input file
+    output_path = 'cleaned_data.csv'     # output file
+
+    # Load the data
+    data = load_data(file_path)
+
+    # Handle missing values
+    data = handle_missing_values(data)
+
+    # Remove duplicate rows
+    data = remove_duplicates(data)
+
+    # Detect and remove outliers (example: Age and Salary columns)
+    data = detect_and_handle_outliers(data, numerical_cols=['Age', 'Salary'])
+
+    # Save cleaned data
+    save_cleaned_data(data, output_path)
+
+    print("Data cleaning complete. Cleaned file saved as:", output_path)
